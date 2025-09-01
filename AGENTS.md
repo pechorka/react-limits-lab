@@ -149,7 +149,7 @@ export type Scenario = {
 
 ## 10) Dev server headers for memory API (optional but useful)
 
-* [ ] `vite.config.ts`: add COOP/COEP so `measureUserAgentSpecificMemory()` works in Chromium.
+* [x] `vite.config.ts`: add COOP/COEP so `measureUserAgentSpecificMemory()` works in Chromium.
 
 ```ts
 import { defineConfig } from 'vite'

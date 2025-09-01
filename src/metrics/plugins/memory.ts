@@ -7,6 +7,7 @@ import type { MetricPlugin } from '../engine'
 
 let intervalId: number | null = null
 let inFlight = false
+let uaStatus: 'unknown' | 'ok' | 'broken' = 'unknown'
 
 function toMB(bytes: number) {
   return bytes / (1024 * 1024)
@@ -28,7 +29,8 @@ const plugin: MetricPlugin = {
 
     const tick = async () => {
       const t = performance.now()
-      if (hasUA) {
+      let usedUA = false
+      if (hasUA && uaStatus !== 'broken') {
         if (inFlight) return
         inFlight = true
         try {
@@ -37,16 +39,18 @@ const plugin: MetricPlugin = {
           if (res && typeof res.bytes === 'number') {
             push('memory.ua.bytes', t, res.bytes)
             push('memory.ua.mb', t, toMB(res.bytes))
+            uaStatus = 'ok'
+            usedUA = true
           }
         } catch {
-          // Swallow errors; API may be behind COOP/COEP or restricted
+          // If UA path errors (e.g., not fully cross-origin isolated), mark broken and fall back
+          uaStatus = 'broken'
         } finally {
           inFlight = false
         }
-        return
       }
 
-      if (hasHeap) {
+      if (!usedUA && hasHeap) {
         // Chrome non-standard experimental API
         try {
           const mem = perf.memory as {
@@ -76,6 +80,7 @@ const plugin: MetricPlugin = {
       intervalId = null
     }
     inFlight = false
+    uaStatus = 'unknown'
   },
 }
 
