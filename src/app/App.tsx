@@ -175,8 +175,9 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
 
 import { useSeries } from '../data/seriesStore'
 
-function Dashboard({ isRunning }: { isRunning: boolean }) {
+function Dashboard({ isRunning, runWindow }: { isRunning: boolean; runWindow: { start: number; end?: number } | null }) {
   const fpsSeries = useSeries('fps.value')
+  const frameSeries = useSeries('fps.frame')
   const commitSeries = useSeries('profiler.commit')
 
   const windowMs = 3000
@@ -206,19 +207,94 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
   const fpsStats = stats(fpsSeries, nowFps)
   const commitStats = stats(commitSeries, nowCommit)
 
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666' }
+  // Compute last run summary when stopped and we have a closed window
+  const lastSummary = useMemo(() => {
+    if (!runWindow || runWindow.end == null) return null
+    const { start, end } = runWindow
+    const inWindow = (p: { t: number }) => p.t >= start && p.t <= end
+
+    function summarize(series: { t: number; v: any }[]) {
+      const values: number[] = []
+      for (let i = 0; i < series.length; i++) {
+        const p = series[i]
+        if (!inWindow(p)) continue
+        const val = typeof p.v === 'number' ? p.v : Number(p.v)
+        if (Number.isFinite(val)) values.push(val)
+      }
+      if (values.length === 0) return { count: 0, avg: NaN, p95: NaN, min: NaN, max: NaN }
+      let sum = 0,
+        min = Infinity,
+        max = -Infinity
+      for (const v of values) {
+        sum += v
+        if (v < min) min = v
+        if (v > max) max = v
+      }
+      const sorted = values.slice().sort((a, b) => a - b)
+      const idx95 = Math.max(0, Math.min(sorted.length - 1, Math.floor(0.95 * (sorted.length - 1))))
+      return { count: values.length, avg: sum / values.length, p95: sorted[idx95], min, max }
+    }
+
+    const frames = summarize(frameSeries)
+    const fps = summarize(fpsSeries)
+    const commits = summarize(commitSeries)
+
+    // Jank thresholds: >16.7ms (60Hz) and >33ms (30Hz)
+    let jank16 = 0,
+      jank33 = 0
+    for (let i = 0; i < frameSeries.length; i++) {
+      const p = frameSeries[i]
+      if (!inWindow(p)) continue
+      const v = Number(p.v)
+      if (!Number.isFinite(v)) continue
+      if (v > 16.7) jank16++
+      if (v > 33) jank33++
+    }
+
+    return {
+      durationSec: (end - start) / 1000,
+      avgFps: fps.count ? fps.avg : NaN,
+      p95FrameMs: frames.count ? frames.p95 : NaN,
+      avgCommitMs: commits.count ? commits.avg : NaN,
+      p95CommitMs: commits.count ? commits.p95 : NaN,
+      frames: frames.count,
+      commits: commits.count,
+      jank16,
+      jank33,
+    }
+  }, [runWindow, frameSeries, fpsSeries, commitSeries])
+
+  const labelStyle: React.CSSProperties = { fontSize: 12, color: '#444' }
   const numStyle: React.CSSProperties = {
     fontSize: 24,
     fontVariantNumeric: 'tabular-nums',
     fontFeatureSettings: '"tnum" 1',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    color: '#111',
   }
   const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'baseline' }
+  const cardStyle: React.CSSProperties = { padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fff', color: '#111' }
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
+      {!isRunning && lastSummary && (
+        <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, background: '#fafafa', color: '#111' }}>
+          <div style={{ fontWeight: 600, marginBottom: 6 }}>Last run summary</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, fontVariantNumeric: 'tabular-nums' }}>
+            <div><span style={labelStyle}>Duration</span><div style={numStyle}>{lastSummary.durationSec.toFixed(1)}s</div></div>
+            <div><span style={labelStyle}>Avg FPS</span><div style={numStyle}>{Number.isFinite(lastSummary.avgFps) ? lastSummary.avgFps.toFixed(1) : '—'}</div></div>
+            <div><span style={labelStyle}>p95 frame</span><div style={numStyle}>{Number.isFinite(lastSummary.p95FrameMs) ? lastSummary.p95FrameMs.toFixed(2) : '—'} ms</div></div>
+            <div><span style={labelStyle}>Avg commit</span><div style={numStyle}>{Number.isFinite(lastSummary.avgCommitMs) ? lastSummary.avgCommitMs.toFixed(2) : '—'} ms</div></div>
+            <div><span style={labelStyle}>p95 commit</span><div style={numStyle}>{Number.isFinite(lastSummary.p95CommitMs) ? lastSummary.p95CommitMs.toFixed(2) : '—'} ms</div></div>
+            <div><span style={labelStyle}>Frames</span><div style={numStyle}>{lastSummary.frames}</div></div>
+            <div><span style={labelStyle}>Commits</span><div style={numStyle}>{lastSummary.commits}</div></div>
+            <div><span style={labelStyle}>Jank &gt;16.7ms</span><div style={numStyle}>{lastSummary.jank16}</div></div>
+            <div><span style={labelStyle}>Jank &gt;33ms</span><div style={numStyle}>{lastSummary.jank33}</div></div>
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: 12 }}>
-        <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
+        <div style={{ ...cardStyle, flex: 1 }}>
           <div style={labelStyle}>FPS (avg/min/max, 3s)</div>
           <div style={rowStyle}>
             <span style={numStyle}>{isRunning ? (fpsStats.avg != null ? Math.round(fpsStats.avg) : '…') : '—'}</span>
@@ -228,7 +304,7 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
             <span style={numStyle}>{isRunning ? (fpsStats.max != null ? Math.round(fpsStats.max) : '…') : '—'}</span>
           </div>
         </div>
-        <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
+        <div style={{ ...cardStyle, flex: 1 }}>
           <div style={labelStyle}>Commit (ms avg/min/max, 3s)</div>
           <div style={rowStyle}>
             <span style={numStyle}>
@@ -240,23 +316,23 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
             <span style={numStyle}>{isRunning ? (commitStats.max != null ? commitStats.max.toFixed(2) : '…') : '—'}</span>
           </div>
         </div>
-        <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
+        <div style={{ ...cardStyle, flex: 1 }}>
           <div style={labelStyle}>Long tasks</div>
           <div style={numStyle}>{isRunning ? '…' : '0'}</div>
         </div>
       </div>
 
-      <div style={{ height: 160, border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
+      <div style={{ ...cardStyle, height: 160, padding: 8 }}>
         <div style={{ fontSize: 12, color: '#666' }}>FPS (last N sec)</div>
         <div style={{ height: 120, display: 'grid', placeItems: 'center', color: '#999' }}>TinyLine placeholder</div>
       </div>
 
-      <div style={{ height: 160, border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
+      <div style={{ ...cardStyle, height: 160, padding: 8 }}>
         <div style={{ fontSize: 12, color: '#666' }}>Commit time p95</div>
         <div style={{ height: 120, display: 'grid', placeItems: 'center', color: '#999' }}>TinyLine placeholder</div>
       </div>
 
-      <div style={{ border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
+      <div style={{ ...cardStyle, padding: 8 }}>
         <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>Long Tasks (last 20)</div>
         <div style={{ color: '#999' }}>Table placeholder</div>
       </div>
@@ -267,6 +343,7 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
 export default function App() {
   const { scenario, updateScenario, reset } = useScenarioConfig()
   const [isRunning, setIsRunning] = useState(false)
+  const [runWindow, setRunWindow] = useState<{ start: number; end?: number } | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
 
   const onStart = () => setIsRunning(true)
@@ -281,18 +358,33 @@ export default function App() {
     setIsRunning(false)
     stopRun()
     reset()
+    setRunWindow(null)
   }
 
   // Orchestrate run start/stop with imperative mount into containerRef
+  // Also enforce auto-stop based on scenario.durationSec
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
+
+    let durationTimer: number | undefined
+
     if (isRunning) {
       startRun(scenario, el)
+      setRunWindow({ start: performance.now() })
+      const ms = Math.max(0, Math.floor(scenario.durationSec * 1000))
+      if (ms > 0 && Number.isFinite(ms)) {
+        durationTimer = window.setTimeout(() => {
+          setIsRunning(false)
+        }, ms)
+      }
     } else {
       stopRun()
+      // Close the run window if it's open
+      setRunWindow((w) => (w && w.end == null ? { ...w, end: performance.now() } : w))
     }
     return () => {
+      if (durationTimer) clearTimeout(durationTimer)
       // Ensure teardown if component unmounts while running
       stopRun()
     }
@@ -325,7 +417,7 @@ export default function App() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateRows: 'auto 1fr', gap: 16 }}>
-        <Dashboard isRunning={isRunning} />
+        <Dashboard isRunning={isRunning} runWindow={runWindow} />
 
         <div style={{ border: '1px dashed #ccc', borderRadius: 8, padding: 12 }}>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>Scenario Mount</div>
