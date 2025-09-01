@@ -11,6 +11,7 @@ import { pushMetric } from '../data/seriesStore'
 import fpsPlugin from './plugins/fps'
 
 const registry: MetricPlugin[] = []
+let started = false
 
 export function register(plugin: MetricPlugin) {
   registry.push(plugin)
@@ -21,6 +22,8 @@ function push(series: string, t: number, v: number | object) {
 }
 
 export function startAll() {
+  if (started) return
+  started = true
   registry.forEach((p) => {
     try {
       p.start(push)
@@ -29,11 +32,13 @@ export function startAll() {
 }
 
 export function stopAll() {
+  if (!started) return
   registry.forEach((p) => {
     try {
       p.stop()
     } catch {}
   })
+  started = false
 }
 
 // Register built-in plugins
