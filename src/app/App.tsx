@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useScenarioConfig } from '../state/config'
 import type { Scenario } from '../types/scenario'
-import Root from './Root'
+// Root Profiler is applied inside mountScenario for now
+import { startRun, stopRun } from './runController'
+import { useEffect, useRef } from 'react'
 
 function SliderRow({
   label,
@@ -210,6 +212,7 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
 export default function App() {
   const { scenario, updateScenario, reset } = useScenarioConfig()
   const [isRunning, setIsRunning] = useState(false)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const onStart = () => setIsRunning(true)
   const onStop = () => setIsRunning(false)
@@ -221,8 +224,24 @@ export default function App() {
       localStorage.removeItem('rlab.scenario.v1')
     } catch {}
     setIsRunning(false)
+    stopRun()
     reset()
   }
+
+  // Orchestrate run start/stop with imperative mount into containerRef
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    if (isRunning) {
+      startRun(scenario, el)
+    } else {
+      stopRun()
+    }
+    return () => {
+      // Ensure teardown if component unmounts while running
+      stopRun()
+    }
+  }, [isRunning, scenario])
 
   const containerStyle = useMemo(
     () => ({
@@ -255,11 +274,7 @@ export default function App() {
 
         <div style={{ border: '1px dashed #ccc', borderRadius: 8, padding: 12 }}>
           <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>Scenario Mount</div>
-          <Root>
-            <div style={{ color: '#999' }}>
-              {isRunning ? 'Scenario would mount here…' : 'Not running'}
-            </div>
-          </Root>
+          <div ref={containerRef} />
         </div>
       </div>
     </div>

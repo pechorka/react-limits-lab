@@ -11,7 +11,8 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { createRoot, Root as DomRoot } from 'react-dom/client'
+import { createRoot, type Root as DomRoot } from 'react-dom/client'
+import Root from '../app/Root'
 import type { Scenario } from '../types/scenario'
 
 // Public API
@@ -278,7 +279,9 @@ export function mountScenario(container: HTMLElement, scenario: Scenario): Mount
   const root = createRoot(container)
   const element = (
     <StrictMode>
-      <ScenarioView scenario={scenario} />
+      <Root>
+        <ScenarioView scenario={scenario} />
+      </Root>
     </StrictMode>
   )
   root.render(element)
