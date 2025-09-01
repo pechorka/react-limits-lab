@@ -63,15 +63,15 @@ export type Scenario = {
 
 ## 4) Scenario engine (mount/unmount)
 
-* [ ] `src/scenario/mountScenario.tsx`
+* [x] `src/scenario/mountScenario.tsx`
 
-  * [ ] **Component factory**: produce components that instantiate the requested counts of hooks (`useState`, `useEffect`, `useLayoutEffect`, `useMemo`, `useCallback`, `useRef`).
-  * [ ] **Deps strategy**: some memos/callbacks stable, some unstable (invalidations).
-  * [ ] **Tickers**: timers to trigger state/prop/context churn at given Hz.
-  * [ ] **Context fabric**: chain N providers; consumers spread across the tree.
-  * [ ] **Tree shaper**: breadth × depth with leaves of type `text|layout|list`.
-  * [ ] **startTransition**: apply to a fraction of updates (`transitionRatio`).
-  * [ ] **Teardown**: return a disposer that clears all timers/rAF and signals unmount.
+  * [x] **Component factory**: produce components that instantiate the requested counts of hooks (`useState`, `useEffect`, `useLayoutEffect`, `useMemo`, `useCallback`, `useRef`).
+  * [x] **Deps strategy**: some memos/callbacks stable, some unstable (invalidations).
+  * [x] **Tickers**: timers to trigger state/prop/context churn at given Hz.
+  * [x] **Context fabric**: chain N providers; consumers spread across the tree.
+  * [x] **Tree shaper**: breadth × depth with leaves of type `text|layout|list`.
+  * [x] **startTransition**: apply to a fraction of updates (`transitionRatio`).
+  * [x] **Teardown**: return a disposer that clears all timers/rAF and signals unmount.
 
 *Stub leaf kinds*
 
