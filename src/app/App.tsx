@@ -3,11 +3,11 @@ import { useScenarioConfig } from '../state/config'
 import type { Scenario } from '../types/scenario'
 import Root from './Root'
 
-function NumberInput({
+function SliderRow({
   label,
   value,
   min = 0,
-  max,
+  max = 100,
   step = 1,
   onChange,
 }: {
@@ -18,18 +18,21 @@ function NumberInput({
   step?: number
   onChange: (v: number) => void
 }) {
+  const isFloat = step < 1
+  const fmt = (n: number) => (isFloat ? n.toFixed(2) : Math.round(n))
   return (
     <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       <span style={{ flex: 1 }}>{label}</span>
       <input
-        type="number"
+        type="range"
         value={value}
         min={min}
         max={max}
         step={step}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: 90 }}
+        style={{ flex: 2 }}
       />
+      <span style={{ width: 48, textAlign: 'right' }}>{fmt(value)}</span>
     </label>
   )
 }
@@ -74,14 +77,14 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <Section title="Tree">
-        <NumberInput
+        <SliderRow
           label="Depth"
           value={scenario.tree.depth}
           min={0}
           max={10}
           onChange={(v) => updateScenario((p) => ({ ...p, tree: { ...p.tree, depth: v } }))}
         />
-        <NumberInput
+        <SliderRow
           label="Breadth"
           value={scenario.tree.breadth}
           min={0}
@@ -108,42 +111,37 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
       </Section>
 
       <Section title="Hooks per component">
-        <NumberInput label="useState" value={scenario.hooks.useStatePerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useStatePerComp: v } }))} />
-        <NumberInput label="useEffect" value={scenario.hooks.useEffectPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useEffectPerComp: v } }))} />
-        <NumberInput label="useLayoutEffect" value={scenario.hooks.useLayoutEffectPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useLayoutEffectPerComp: v } }))} />
-        <NumberInput label="useMemo" value={scenario.hooks.useMemoPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useMemoPerComp: v } }))} />
-        <NumberInput label="useCallback" value={scenario.hooks.useCallbackPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useCallbackPerComp: v } }))} />
-        <NumberInput label="useRef" value={scenario.hooks.useRefPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useRefPerComp: v } }))} />
+        <SliderRow label="useState" value={scenario.hooks.useStatePerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useStatePerComp: v } }))} />
+        <SliderRow label="useEffect" value={scenario.hooks.useEffectPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useEffectPerComp: v } }))} />
+        <SliderRow label="useLayoutEffect" value={scenario.hooks.useLayoutEffectPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useLayoutEffectPerComp: v } }))} />
+        <SliderRow label="useMemo" value={scenario.hooks.useMemoPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useMemoPerComp: v } }))} />
+        <SliderRow label="useCallback" value={scenario.hooks.useCallbackPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useCallbackPerComp: v } }))} />
+        <SliderRow label="useRef" value={scenario.hooks.useRefPerComp} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, hooks: { ...p.hooks, useRefPerComp: v } }))} />
       </Section>
 
       <Section title="Context">
-        <NumberInput label="Providers" value={scenario.context.providers} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, providers: v } }))} />
-        <NumberInput label="Consumers/provider" value={scenario.context.consumersPerProvider} min={0} max={50} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, consumersPerProvider: v } }))} />
-        <NumberInput label="Update Hz" value={scenario.context.updateHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, updateHz: v } }))} />
+        <SliderRow label="Providers" value={scenario.context.providers} min={0} max={20} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, providers: v } }))} />
+        <SliderRow label="Consumers/provider" value={scenario.context.consumersPerProvider} min={0} max={50} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, consumersPerProvider: v } }))} />
+        <SliderRow label="Update Hz" value={scenario.context.updateHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, context: { ...p.context, updateHz: v } }))} />
       </Section>
 
       <Section title="Churn">
-        <NumberInput label="Prop Hz" value={scenario.churn.propHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, propHz: v } }))} />
-        <NumberInput label="State Hz" value={scenario.churn.stateHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, stateHz: v } }))} />
-        <NumberInput label="Context Hz" value={scenario.churn.contextHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, contextHz: v } }))} />
-        <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          <span style={{ flex: 1 }}>Transition ratio</span>
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.05}
-            value={scenario.churn.transitionRatio}
-            onChange={(e) => updateScenario((p) => ({ ...p, churn: { ...p.churn, transitionRatio: Number(e.target.value) } }))}
-            style={{ width: 120 }}
-          />
-          <span style={{ width: 40, textAlign: 'right' }}>{scenario.churn.transitionRatio.toFixed(2)}</span>
-        </label>
+        <SliderRow label="Prop Hz" value={scenario.churn.propHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, propHz: v } }))} />
+        <SliderRow label="State Hz" value={scenario.churn.stateHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, stateHz: v } }))} />
+        <SliderRow label="Context Hz" value={scenario.churn.contextHz} min={0} max={240} onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, contextHz: v } }))} />
+        <SliderRow
+          label="Transition ratio"
+          value={scenario.churn.transitionRatio}
+          min={0}
+          max={1}
+          step={0.05}
+          onChange={(v) => updateScenario((p) => ({ ...p, churn: { ...p.churn, transitionRatio: v } }))}
+        />
       </Section>
 
       <Section title="Payload">
-        <NumberInput label="DOM nodes/leaf" value={scenario.payload.domNodesPerLeaf} min={0} max={200} onChange={(v) => updateScenario((p) => ({ ...p, payload: { ...p.payload, domNodesPerLeaf: v } }))} />
-        <NumberInput label="List rows" value={scenario.payload.listRows} min={0} max={20000} onChange={(v) => updateScenario((p) => ({ ...p, payload: { ...p.payload, listRows: v } }))} />
+        <SliderRow label="DOM nodes/leaf" value={scenario.payload.domNodesPerLeaf} min={0} max={200} onChange={(v) => updateScenario((p) => ({ ...p, payload: { ...p.payload, domNodesPerLeaf: v } }))} />
+        <SliderRow label="List rows" value={scenario.payload.listRows} min={0} max={20000} onChange={(v) => updateScenario((p) => ({ ...p, payload: { ...p.payload, listRows: v } }))} />
         <Checkbox label="Virtualization" checked={scenario.payload.virtualization} onChange={(v) => updateScenario((p) => ({ ...p, payload: { ...p.payload, virtualization: v } }))} />
       </Section>
 
@@ -152,7 +150,7 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
       </Section>
 
       <Section title="Run">
-        <NumberInput label="Duration (sec)" value={scenario.durationSec} min={1} max={3600} onChange={(v) => updateScenario((p) => ({ ...p, durationSec: v }))} />
+        <SliderRow label="Duration (sec)" value={scenario.durationSec} min={1} max={3600} onChange={(v) => updateScenario((p) => ({ ...p, durationSec: v }))} />
 
         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
           <button onClick={onStart} disabled={isRunning}>
@@ -267,4 +265,3 @@ export default function App() {
     </div>
   )
 }
-
