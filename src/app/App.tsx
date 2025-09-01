@@ -173,37 +173,75 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
   )
 }
 
-import { useLatest } from '../data/seriesStore'
+import { useSeries } from '../data/seriesStore'
 
 function Dashboard({ isRunning }: { isRunning: boolean }) {
-  const fps = useLatest('fps.value')
-  const commit = useLatest('profiler.commit')
-  const fpsValue = fps ? Math.round(typeof fps.v === 'number' ? fps.v : 0) : undefined
-  const commitMs = commit ? Number(commit.v) : undefined
+  const fpsSeries = useSeries('fps.value')
+  const commitSeries = useSeries('profiler.commit')
 
+  const windowMs = 3000
+  const nowFps = fpsSeries.length ? fpsSeries[fpsSeries.length - 1].t : performance.now()
+  const nowCommit = commitSeries.length ? commitSeries[commitSeries.length - 1].t : performance.now()
+
+  function stats(series: { t: number; v: any }[], now: number) {
+    const start = now - windowMs
+    let min = Infinity,
+      max = -Infinity,
+      sum = 0,
+      n = 0
+    for (let i = series.length - 1; i >= 0; i--) {
+      const p = series[i]
+      if (p.t < start) break
+      const val = typeof p.v === 'number' ? p.v : Number(p.v)
+      if (!Number.isFinite(val)) continue
+      if (val < min) min = val
+      if (val > max) max = val
+      sum += val
+      n++
+    }
+    if (n === 0) return { avg: undefined as number | undefined, min: undefined as number | undefined, max: undefined as number | undefined, n }
+    return { avg: sum / n, min, max, n }
+  }
+
+  const fpsStats = stats(fpsSeries, nowFps)
+  const commitStats = stats(commitSeries, nowCommit)
+
+  const labelStyle: React.CSSProperties = { fontSize: 12, color: '#666' }
   const numStyle: React.CSSProperties = {
     fontSize: 24,
     fontVariantNumeric: 'tabular-nums',
     fontFeatureSettings: '"tnum" 1',
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-    minWidth: '6ch',
-    textAlign: 'right',
-    display: 'inline-block',
   }
+  const rowStyle: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'baseline' }
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#666' }}>FPS</div>
-          <div style={numStyle}>{isRunning ? (fpsValue ?? '…') : '—'}</div>
+          <div style={labelStyle}>FPS (avg/min/max, 3s)</div>
+          <div style={rowStyle}>
+            <span style={numStyle}>{isRunning ? (fpsStats.avg != null ? Math.round(fpsStats.avg) : '…') : '—'}</span>
+            <span style={{ ...labelStyle, marginLeft: 'auto' }}>min</span>
+            <span style={numStyle}>{isRunning ? (fpsStats.min != null ? Math.round(fpsStats.min) : '…') : '—'}</span>
+            <span style={{ ...labelStyle }}>max</span>
+            <span style={numStyle}>{isRunning ? (fpsStats.max != null ? Math.round(fpsStats.max) : '…') : '—'}</span>
+          </div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#666' }}>Commit (ms)</div>
-          <div style={numStyle}>{isRunning ? (commitMs?.toFixed(2) ?? '…') : '—'}</div>
+          <div style={labelStyle}>Commit (ms avg/min/max, 3s)</div>
+          <div style={rowStyle}>
+            <span style={numStyle}>
+              {isRunning ? (commitStats.avg != null ? commitStats.avg.toFixed(2) : '…') : '—'}
+            </span>
+            <span style={{ ...labelStyle, marginLeft: 'auto' }}>min</span>
+            <span style={numStyle}>{isRunning ? (commitStats.min != null ? commitStats.min.toFixed(2) : '…') : '—'}</span>
+            <span style={{ ...labelStyle }}>max</span>
+            <span style={numStyle}>{isRunning ? (commitStats.max != null ? commitStats.max.toFixed(2) : '…') : '—'}</span>
+          </div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#666' }}>Long tasks</div>
+          <div style={labelStyle}>Long tasks</div>
           <div style={numStyle}>{isRunning ? '…' : '0'}</div>
         </div>
       </div>
