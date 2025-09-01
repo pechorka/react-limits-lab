@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer } from 'react'
-import { Scenario, defaultScenario } from '../types/scenario'
+import type { Scenario } from '../types/scenario'
+import { defaultScenario } from '../types/scenario'
 
 const STORAGE_KEY = 'rlab.scenario.v1'
 const URL_PARAM = 'scenario'
@@ -104,4 +105,3 @@ export function useScenarioConfig(initial?: Scenario) {
 
   return { scenario, setScenario, updateScenario, reset, exportToUrl, importFromUrl }
 }
-

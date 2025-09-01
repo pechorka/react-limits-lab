@@ -50,14 +50,14 @@ export type Scenario = {
 
 ## 3) App shell (UI skeleton)
 
-* [ ] `src/app/App.tsx`
+* [x] `src/app/App.tsx`
 
-  * [ ] Left: **Control Panel** (sliders/inputs for knobs, Start/Stop/Reset).
-  * [ ] Right: **Dashboard** (gauges + tiny charts + logs).
-  * [ ] **Panic button** clears everything and unmounts scenario.
-* [ ] `src/app/Root.tsx`
+  * [x] Left: **Control Panel** (sliders/inputs for knobs, Start/Stop/Reset).
+  * [x] Right: **Dashboard** (gauges + tiny charts + logs).
+  * [x] **Panic button** clears everything and unmounts scenario.
+* [x] `src/app/Root.tsx`
 
-  * [ ] Wrap generated tree with `<React.Profiler onRender={...}>`.
+  * [x] Wrap generated tree with `<React.Profiler onRender={...}>`.
 
 ---
 
@@ -186,8 +186,8 @@ export default defineConfig({
 ## 12) Minimal file checklist
 
 * [ ] `src/main.tsx` — mount `<App />`
-* [ ] `src/app/App.tsx` — layout, control panel, dashboard, start/stop logic
-* [ ] `src/app/Root.tsx` — `<Profiler>` wrapper
+* [x] `src/app/App.tsx` — layout, control panel, dashboard, start/stop logic
+* [x] `src/app/Root.tsx` — `<Profiler>` wrapper
 * [ ] `src/state/config.ts` — scenario state + persistence
 * [ ] `src/types/scenario.ts` — Scenario type
 * [ ] `src/scenario/mountScenario.tsx` — generator + teardown
