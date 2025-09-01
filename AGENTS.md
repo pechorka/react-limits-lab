@@ -83,9 +83,9 @@ export type Scenario = {
 
 ## 5) Metrics engine (no dependencies)
 
-* [ ] `src/metrics/engine.ts`
+* [x] `src/metrics/engine.ts`
 
-  * [ ] Simple **plugin contract**:
+  * [x] Simple **plugin contract**:
 
     ```ts
     export interface MetricPlugin {
@@ -95,11 +95,11 @@ export type Scenario = {
       series: { key: string; units?: string }[];
     }
     ```
-  * [ ] Registry: `startAll()`, `stopAll()`.
+  * [x] Registry: `startAll()`, `stopAll()`.
 * [ ] Built-in plugins:
 
-  * [ ] **Profiler**: from `<Profiler onRender>` push `{ actualDuration, baseDuration, commitTime }`.
-  * [ ] **FPS**: rAF loop, compute FPS + frame time; count jank (frame > 16.7/33ms).
+  * [x] **Profiler**: from `<Profiler onRender>` push `{ actualDuration, baseDuration, commitTime }`.
+  * [x] **FPS**: rAF loop, compute FPS + frame time; count jank (frame > 16.7/33ms).
   * [ ] **LongTasks**: `PerformanceObserver('longtask')`, push `{ duration }` + attribution if present.
   * [ ] **Memory**: feature-detect `performance.measureUserAgentSpecificMemory()`; fallback to `performance.memory` with “experimental” label.
   * [ ] **UserTiming**: wrapper utils `mark(name)`, `measure(name, from, to)` + observer.
@@ -108,10 +108,10 @@ export type Scenario = {
 
 ## 6) Data buffers (ring buffers)
 
-* [ ] `src/data/seriesStore.ts`
+* [x] `src/data/seriesStore.ts`
 
-  * [ ] Per-series circular buffer: `Array<{t:number,v:number|object}>` with max length (e.g., 5k).
-  * [ ] Single **animation-tick** dispatcher that flushes new points to UI state to avoid thrash.
+  * [x] Per-series circular buffer: `Array<{t:number,v:number|object}>` with max length (e.g., 5k).
+  * [x] Single **animation-tick** dispatcher that flushes new points to UI state to avoid thrash.
   * [ ] Rolling percentiles helper (p50/p95) for frame/commit times.
 
 ---

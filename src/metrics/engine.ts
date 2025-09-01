@@ -1,5 +1,5 @@
-// Minimal no-op metrics engine to allow runController wiring.
-// Will be expanded with plugins in the Metrics task.
+// Minimal metrics engine with a simple plugin registry.
+// Uses seriesStore to push measurements.
 export interface MetricPlugin {
   id: string
   start: (push: (series: string, t: number, v: number | object) => void) => void
@@ -7,14 +7,17 @@ export interface MetricPlugin {
   series: { key: string; units?: string }[]
 }
 
+import { pushMetric } from '../data/seriesStore'
+import fpsPlugin from './plugins/fps'
+
 const registry: MetricPlugin[] = []
 
 export function register(plugin: MetricPlugin) {
   registry.push(plugin)
 }
 
-function push(_series: string, _t: number, _v: number | object) {
-  // Placeholder; will bridge to seriesStore later
+function push(series: string, t: number, v: number | object) {
+  pushMetric(series, t, v)
 }
 
 export function startAll() {
@@ -33,3 +36,5 @@ export function stopAll() {
   })
 }
 
+// Register built-in plugins
+register(fpsPlugin)

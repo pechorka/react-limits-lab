@@ -1,5 +1,6 @@
 import { Profiler } from 'react'
 import type { ReactNode } from 'react'
+import { pushMetric } from '../data/seriesStore'
 
 // Lightweight Profiler wrapper. Metrics wiring will be added later.
 export function Root({ children }: { children: ReactNode }) {
@@ -9,12 +10,14 @@ export function Root({ children }: { children: ReactNode }) {
       onRender={(
         _id,
         _phase,
-        _actualDuration,
+        actualDuration,
         _baseDuration,
-        _startTime,
-        _commitTime,
+        startTime,
+        commitTime,
       ) => {
-        // Intentionally no-op for now; metrics engine hooks in later.
+        const t = performance.now()
+        pushMetric('profiler.actual', t, actualDuration)
+        pushMetric('profiler.commit', t, commitTime - startTime)
       }}
     >
       {children}

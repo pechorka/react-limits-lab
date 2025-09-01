@@ -173,17 +173,24 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
   )
 }
 
+import { useLatest } from '../data/seriesStore'
+
 function Dashboard({ isRunning }: { isRunning: boolean }) {
+  const fps = useLatest('fps.value')
+  const commit = useLatest('profiler.commit')
+  const fpsValue = fps ? Math.round(typeof fps.v === 'number' ? fps.v : 0) : undefined
+  const commitMs = commit ? Number(commit.v) : undefined
+
   return (
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#666' }}>FPS</div>
-          <div style={{ fontSize: 24 }}>{isRunning ? '…' : '—'}</div>
+          <div style={{ fontSize: 24 }}>{isRunning ? (fpsValue ?? '…') : '—'}</div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
-          <div style={{ fontSize: 12, color: '#666' }}>Heap (MB)</div>
-          <div style={{ fontSize: 24 }}>{isRunning ? '…' : '—'}</div>
+          <div style={{ fontSize: 12, color: '#666' }}>Commit (ms)</div>
+          <div style={{ fontSize: 24 }}>{isRunning ? (commitMs?.toFixed(2) ?? '…') : '—'}</div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#666' }}>Long tasks</div>
