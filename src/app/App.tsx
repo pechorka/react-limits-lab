@@ -181,20 +181,30 @@ function Dashboard({ isRunning }: { isRunning: boolean }) {
   const fpsValue = fps ? Math.round(typeof fps.v === 'number' ? fps.v : 0) : undefined
   const commitMs = commit ? Number(commit.v) : undefined
 
+  const numStyle: React.CSSProperties = {
+    fontSize: 24,
+    fontVariantNumeric: 'tabular-nums',
+    fontFeatureSettings: '"tnum" 1',
+    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    minWidth: '6ch',
+    textAlign: 'right',
+    display: 'inline-block',
+  }
+
   return (
     <div style={{ display: 'grid', gap: 12 }}>
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#666' }}>FPS</div>
-          <div style={{ fontSize: 24 }}>{isRunning ? (fpsValue ?? '…') : '—'}</div>
+          <div style={numStyle}>{isRunning ? (fpsValue ?? '…') : '—'}</div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#666' }}>Commit (ms)</div>
-          <div style={{ fontSize: 24 }}>{isRunning ? (commitMs?.toFixed(2) ?? '…') : '—'}</div>
+          <div style={numStyle}>{isRunning ? (commitMs?.toFixed(2) ?? '…') : '—'}</div>
         </div>
         <div style={{ flex: 1, padding: 12, border: '1px solid #eee', borderRadius: 8 }}>
           <div style={{ fontSize: 12, color: '#666' }}>Long tasks</div>
-          <div style={{ fontSize: 24 }}>{isRunning ? '…' : 0}</div>
+          <div style={numStyle}>{isRunning ? '…' : '0'}</div>
         </div>
       </div>
 
