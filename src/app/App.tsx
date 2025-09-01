@@ -174,6 +174,7 @@ function ControlPanel({ scenario, updateScenario, onStart, onStop, onReset, isRu
 }
 
 import { useSeries } from '../data/seriesStore'
+import HeapGauge from '../ui/gauges/HeapGauge'
 
 function Dashboard({ isRunning, runWindow }: { isRunning: boolean; runWindow: { start: number; end?: number } | null }) {
   const fpsSeries = useSeries('fps.value')
@@ -293,7 +294,7 @@ function Dashboard({ isRunning, runWindow }: { isRunning: boolean; runWindow: { 
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', gap: 12 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <div style={{ ...cardStyle, flex: 1 }}>
           <div style={labelStyle}>FPS (avg/min/max, 3s)</div>
           <div style={rowStyle}>
@@ -319,6 +320,9 @@ function Dashboard({ isRunning, runWindow }: { isRunning: boolean; runWindow: { 
         <div style={{ ...cardStyle, flex: 1 }}>
           <div style={labelStyle}>Long tasks</div>
           <div style={numStyle}>{isRunning ? '…' : '0'}</div>
+        </div>
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <HeapGauge />
         </div>
       </div>
 

@@ -101,7 +101,7 @@ export type Scenario = {
   * [x] **Profiler**: from `<Profiler onRender>` push `{ actualDuration, baseDuration, commitTime }`.
   * [x] **FPS**: rAF loop, compute FPS + frame time; count jank (frame > 16.7/33ms).
   * [ ] **LongTasks**: `PerformanceObserver('longtask')`, push `{ duration }` + attribution if present.
-  * [ ] **Memory**: feature-detect `performance.measureUserAgentSpecificMemory()`; fallback to `performance.memory` with “experimental” label.
+  * [x] **Memory**: feature-detect `performance.measureUserAgentSpecificMemory()`; fallback to `performance.memory` with “experimental” label.
   * [ ] **UserTiming**: wrapper utils `mark(name)`, `measure(name, from, to)` + observer.
 
 ---

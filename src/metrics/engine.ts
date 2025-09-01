@@ -9,6 +9,7 @@ export interface MetricPlugin {
 
 import { pushMetric } from '../data/seriesStore'
 import fpsPlugin from './plugins/fps'
+import memoryPlugin from './plugins/memory'
 
 const registry: MetricPlugin[] = []
 let started = false
@@ -43,3 +44,4 @@ export function stopAll() {
 
 // Register built-in plugins
 register(fpsPlugin)
+register(memoryPlugin)
